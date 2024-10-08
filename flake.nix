@@ -7,7 +7,7 @@
 
   outputs = { self, nixpkgs }:
     let
-      system = "x86_64-linux";  # Uses your current system
+      system = "x86_64-linux";  
       currentSystem = system;
       pkgs = import nixpkgs { inherit system; };
       python = pkgs.python3;
@@ -25,27 +25,41 @@
           sha256= "sha256-+BPUpt2Ure5dT/JmGR0dlb9tQWSk+sxTVCLAIbJQTPs="; 
         };
       });
+
+      alive-progress = python.pkgs.alive-progress.overrideAttrs (oldAttrs: rec {
+        ignoreCollisions = true;
+        postBuild = ''
+          rm LICENSE
+        '';
+      });
     in with pkgs; 
     {
       packages.${system} = rec {
         grapheme = callPackage ./pkgs/grapheme { };
         snakemake = callPackage ./pkgs/snakemake { };
-        aboutTime = callPackage ./pkgs/about-time { };
         pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
         bioformats = callPackage ./pkgs/python-bioformats { inherit cython pythonJavabridge; };
-        
       };
 
       devShells.${system}.default = pkgs.mkShell {
           buildInputs = [
-            (python.withPackages ( ps: with ps; [
-              grapheme
-              numpy 
-              snakemake
-              self.packages.${system}.aboutTime
-              self.packages.${system}.pythonJavabridge
-              self.packages.${system}.bioformats
-            ]))
+            (python.buildEnv.override {
+              extraLibs = with python.pkgs; [
+                grapheme numpy snakemake
+                self.packages.${system}.pythonJavabridge
+                self.packages.${system}.bioformats
+                alive-progress
+              ];
+              ignoreCollisions = true;
+            })
+            # (python.withPackages ( ps: with ps; [
+            #   grapheme
+            #   numpy 
+            #   snakemake
+            #   self.packages.${system}.pythonJavabridge
+            #   self.packages.${system}.bioformats
+            #   alive-progress
+            # ]))
           ];
           shellHook = ''
             export JAVA_HOME=${pkgs.jdk}

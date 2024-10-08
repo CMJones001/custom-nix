@@ -24,7 +24,7 @@ buildPythonPackage rec {
     pyproject = true;
 
     meta = with lib; {
-      homepage = "https://github.com/LeeKamentsky/python-javabridge";
+      homepage = "https://github.com/CMJones001/python-javabridge";
       descriptions = ''
         The javabridge Python package makes it easy
         to start a Java virtual machine (JVM) from Python and interact with it.
