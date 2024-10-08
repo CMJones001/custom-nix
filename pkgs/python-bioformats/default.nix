@@ -1,24 +1,19 @@
-{lib, buildPythonPackage, fetchPypi, fetchFromGitHub, boto3, future, numpy, pytest, nose, setuptools, setuptools-scm, jdk, cython}:
+{lib, buildPythonPackage, fetchPypi, fetchFromGitHub, boto3, future, numpy, pytest, nose, setuptools, setuptools-scm, jdk, cython, pythonJavabridge}:
 
 buildPythonPackage rec {
     pname = "python-bioformats";
     version = "4.1.0";
 
-    src = fetchFromGitHub {
-      owner="CellProfiler";
-      repo="python-bioformats";
-      rev = "e5f75fd";
-      sha256 = "sha256-J4VJlLNksTJf0gL37cXALR19vJc3pjKFhwhtujAo7KI=";
+    # We note that the 4.1.0 version uses underscores!!
+    src = fetchPypi{
+      pname = "python_bioformats";
+      version = "4.1.0";
+      sha256= "sha256-hTc/cKSotI/YdBTl6rCqlh57sHdyZF9eAJpvF0V8tOs=";
     };
-
-    # src = fetchPypi{
-    #   inherit pname version;
-    #   sha256= "sha256-nNrdBuJFNWa/zFEuufd0ZU6f017gKn+16PsJeBLFczs=";
-    # };
 
     # checkInputs = [pkgs.pytest pkgs.nose];
     doCheck = true;
-    propagatedBuildInputs = [boto3 future cython];
+    propagatedBuildInputs = [boto3 future cython pythonJavabridge ];
     nativeBuildInputs = [ numpy jdk ];
     buildInputs = [numpy];
     checkInputs = [pytest nose];

@@ -31,8 +31,8 @@
         grapheme = callPackage ./pkgs/grapheme { };
         snakemake = callPackage ./pkgs/snakemake { };
         aboutTime = callPackage ./pkgs/about-time { };
-        # pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
-        bioformats = callPackage ./pkgs/python-bioformats { inherit cython ; };
+        pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
+        bioformats = callPackage ./pkgs/python-bioformats { inherit cython pythonJavabridge; };
         
       };
 
@@ -43,7 +43,7 @@
               numpy 
               snakemake
               self.packages.${system}.aboutTime
-              # self.packages.${system}.pythonJavabridge
+              self.packages.${system}.pythonJavabridge
               self.packages.${system}.bioformats
             ]))
           ];
