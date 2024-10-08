@@ -2,7 +2,7 @@
 
 buildPythonPackage rec {
     pname = "python-javabridge";
-    version = "4.0.3";
+    version = "4.0.4";
 
     src = fetchFromGitHub {
       owner = "CMJones001";
@@ -15,7 +15,7 @@ buildPythonPackage rec {
     pythonImportsCheck = ["javabridge"];
 
     propagatedBuildInputs = [jdk cython numpy];
-    nativeBuildInputs = [jdk numpy cython];
+    nativeBuildInputs = [ jdk ];
     build-system = [
       setuptools
       setuptools-scm

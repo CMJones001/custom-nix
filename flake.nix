@@ -14,9 +14,9 @@
 
       # Attempt to call with pkgs then python pkgs then our defined packages
       callPackage = pkgs.lib.callPackageWith (pkgs // python.pkgs // self);
-
       buildPythonPackage = python.pkgs.buildPythonPackage;
 
+      # Javabridge requires cython3
       cython = python.pkgs.cython.overrideAttrs (oldAttrs: rec {
         version = "0.29.37";
         src = pkgs.fetchPypi {
@@ -31,18 +31,26 @@
         grapheme = callPackage ./pkgs/grapheme { };
         snakemake = callPackage ./pkgs/snakemake { };
         aboutTime = callPackage ./pkgs/about-time { };
-        pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
+        # pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
+        bioformats = callPackage ./pkgs/python-bioformats { inherit cython ; };
+        
       };
 
       devShells.${system}.default = pkgs.mkShell {
           buildInputs = [
             (python.withPackages ( ps: with ps; [
               grapheme
+              numpy 
               snakemake
               self.packages.${system}.aboutTime
-              self.packages.${system}.pythonJavabridge
+              # self.packages.${system}.pythonJavabridge
+              self.packages.${system}.bioformats
             ]))
           ];
+          shellHook = ''
+            export JAVA_HOME=${pkgs.jdk}
+            PATH="${pkgs.jdk}/bin:$PATH"
+          '';
         };
     };
 }
