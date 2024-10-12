@@ -9,11 +9,14 @@
     let
       system = "x86_64-linux";  
       currentSystem = system;
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
       python = pkgs.python3;
 
       # Attempt to call with pkgs then python pkgs then our defined packages
-      callPackage = pkgs.lib.callPackageWith (pkgs // python.pkgs // self);
+      callPackage = pkgs.lib.callPackageWith ( pkgs // python.pkgs // self.packages.${system} );
       buildPythonPackage = python.pkgs.buildPythonPackage;
 
       # Javabridge requires cython3
@@ -26,45 +29,80 @@
         };
       });
 
-      alive-progress = python.pkgs.alive-progress.overrideAttrs (oldAttrs: rec {
-        ignoreCollisions = true;
-        postBuild = ''
-          rm LICENSE
-        '';
-      });
+      basePythonLibs = with python.pkgs; [
+        numpy snakemake alive-progress
+        scipy
+      ];
+
+      javaPythonLibs = with python.pkgs; [
+        self.packages.${system}.pythonJavabridge
+        self.packages.${system}.bioformats
+      ];
+
+      cudaPythonLibs = with python.pkgs; [
+        torch-bin
+
+        # Cellpose Packages
+        opencv4
+        numba
+        tqdm
+        llvmlite
+        natsort
+        imagecodecs-lite
+      ];
+
+
     in with pkgs; 
     {
       packages.${system} = rec {
         grapheme = callPackage ./pkgs/grapheme { };
         snakemake = callPackage ./pkgs/snakemake { };
         pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
-        bioformats = callPackage ./pkgs/python-bioformats { inherit cython pythonJavabridge; };
+        bioformats = callPackage ./pkgs/python-bioformats { inherit cython; };
       };
 
-      devShells.${system}.default = pkgs.mkShell {
+
+      devShells.${system} = {
+
+        base = pkgs.mkShell {
+          buildInputs = [
+            (python.buildEnv.override {
+              extraLibs = basePythonLibs;
+              ignoreCollisions = true;
+            })
+          ];
+        };
+
+        default = pkgs.mkShell {
           buildInputs = [
             (python.buildEnv.override {
               extraLibs = with python.pkgs; [
-                grapheme numpy snakemake
-                self.packages.${system}.pythonJavabridge
-                self.packages.${system}.bioformats
-                alive-progress
-              ];
+                grapheme 
+              ] ++ basePythonLibs ++ javaPythonLibs;
               ignoreCollisions = true;
             })
-            # (python.withPackages ( ps: with ps; [
-            #   grapheme
-            #   numpy 
-            #   snakemake
-            #   self.packages.${system}.pythonJavabridge
-            #   self.packages.${system}.bioformats
-            #   alive-progress
-            # ]))
           ];
           shellHook = ''
             export JAVA_HOME=${pkgs.jdk}
             PATH="${pkgs.jdk}/bin:$PATH"
           '';
         };
+
+        full = pkgs.mkShell {
+          buildInputs = [
+            (python.buildEnv.override {
+              extraLibs = with python.pkgs; [
+                grapheme 
+              ] ++ basePythonLibs ++ javaPythonLibs ++ cudaPythonLibs;
+              ignoreCollisions = true;
+            })
+          ];
+          shellHook = ''
+            export JAVA_HOME=${pkgs.jdk}
+            PATH="${pkgs.jdk}/bin:$PATH"
+          '';
+        };
+
+      };
     };
 }
