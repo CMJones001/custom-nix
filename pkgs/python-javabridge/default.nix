@@ -4,6 +4,7 @@ buildPythonPackage rec {
     pname = "python-javabridge";
     version = "4.0.4";
 
+    # Use our custom version that fixes some numpy problems
     src = fetchFromGitHub {
       owner = "CMJones001";
       repo = "python-javabridge";

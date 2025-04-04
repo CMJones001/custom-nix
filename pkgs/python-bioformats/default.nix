@@ -14,13 +14,6 @@ buildPythonPackage rec {
     propagatedBuildInputs = [boto3 future cython pythonJavabridge];
     checkInputs = [pytest nose];
 
-    # build-system = [
-    #   setuptools
-    #   setuptools-scm
-    # ];
-
-    # pyproject = true;
-
     meta = with lib; {
       homepage = "https://github.com/CellProfiler/python-bioformats/";
       descriptions = ''python-bioformats'';

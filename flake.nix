@@ -19,7 +19,7 @@
       callPackage = pkgs.lib.callPackageWith ( pkgs // python.pkgs // self.packages.${system} );
       buildPythonPackage = python.pkgs.buildPythonPackage;
 
-      # Javabridge requires cython3
+      # Javabridge requires cython < 0.3
       cython = python.pkgs.cython.overrideAttrs (oldAttrs: rec {
         version = "0.29.37";
         src = pkgs.fetchPypi {
@@ -28,6 +28,18 @@
           sha256= "sha256-+BPUpt2Ure5dT/JmGR0dlb9tQWSk+sxTVCLAIbJQTPs="; 
         };
       });
+
+      # Define a function that simplifies the building of the development shells
+      mkPythonDevShell = { extraLibs, shellHook ? "" }:
+        pkgs.mkShell {
+          buildInputs = [
+            (python.buildEnv.override {
+              extraLibs = basePythonLibs ++ extraLibs;
+              ignoreCollisions = true;
+            })
+          ];
+          inherit shellHook;
+        };
 
       basePythonLibs = with python.pkgs; [
         numpy snakemake alive-progress
@@ -40,15 +52,10 @@
       ];
 
       cudaPythonLibs = with python.pkgs; [
-        torch-bin
-
-        # Cellpose Packages
-        opencv4
-        numba
-        tqdm
-        llvmlite
-        natsort
-        imagecodecs-lite
+        self.packages.${system}.roifile
+        self.packages.${system}.imagecodecs
+        # self.packages.${system}.fastremap
+        # self.packages.${system}.cellpose
       ];
 
 
@@ -59,44 +66,31 @@
         snakemake = callPackage ./pkgs/snakemake { };
         pythonJavabridge = callPackage ./pkgs/python-javabridge { inherit cython; };
         bioformats = callPackage ./pkgs/python-bioformats { inherit cython; };
+        roifile = callPackage ./pkgs/roifile { };
+        imagecodecs = callPackage ./pkgs/imagecodecs { };
+        # fastremap = callPackage ./pkgs/fastremap { inherit cython; };
+        # cellpose = callPackage ./pkgs/cellpose {  };
       };
-
 
       devShells.${system} = {
 
-        base = pkgs.mkShell {
-          buildInputs = [
-            (python.buildEnv.override {
-              extraLibs = basePythonLibs;
-              ignoreCollisions = true;
-            })
-          ];
+        # The lightest version of the package, mostly used for annotation
+        base = mkPythonDevShell {
+          extraLibs = [self.packages.${system}.grapheme];
         };
 
-        default = pkgs.mkShell {
-          buildInputs = [
-            (python.buildEnv.override {
-              extraLibs = with python.pkgs; [
-                grapheme 
-              ] ++ basePythonLibs ++ javaPythonLibs;
-              ignoreCollisions = true;
-            })
-          ];
+        # Includes the java depenedencies for opening images
+        default = mkPythonDevShell {
+          extraLibs = javaPythonLibs;
           shellHook = ''
             export JAVA_HOME=${pkgs.jdk}
             PATH="${pkgs.jdk}/bin:$PATH"
           '';
         };
 
-        full = pkgs.mkShell {
-          buildInputs = [
-            (python.buildEnv.override {
-              extraLibs = with python.pkgs; [
-                grapheme 
-              ] ++ basePythonLibs ++ javaPythonLibs ++ cudaPythonLibs;
-              ignoreCollisions = true;
-            })
-          ];
+        # The full package, including CUDA based tools for image segmentation
+        full = mkPythonDevShell {
+          extraLibs = javaPythonLibs ++ cudaPythonLibs ++ [self.packages.${system}.roifile];
           shellHook = ''
             export JAVA_HOME=${pkgs.jdk}
             PATH="${pkgs.jdk}/bin:$PATH"
