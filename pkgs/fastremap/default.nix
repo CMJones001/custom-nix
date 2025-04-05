@@ -1,6 +1,6 @@
 { lib, buildPythonPackage, fetchPypi,
   numpy, cython, pbr, libgcc, 
-  pytest, setuptools, setuptools-scm, pytest-runner
+  pytest, setuptools, setuptools-scm
 }:
 
 buildPythonPackage rec {
@@ -28,7 +28,7 @@ buildPythonPackage rec {
   ];
 
   nativeCheckInputs = [
-    pytest pytest-runner
+    pytest 
   ];
 
   # pyproject = true;

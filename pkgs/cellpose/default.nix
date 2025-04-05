@@ -1,7 +1,7 @@
 { lib, buildPythonPackage, fetchPypi,
   numpy, scipy, natsort, tifffile, tqdm, numba, llvmlite,
   torch-bin, imagecodecs-lite, roifile, fastremap,
-  pytest, setuptools, setuptools-scm, pytest-runner
+  pytest, setuptools, setuptools-scm
 }:
 
 buildPythonPackage rec {
@@ -27,11 +27,8 @@ buildPythonPackage rec {
   ];
 
   nativeCheckInputs = [
-    pytest pytest-runner
+    pytest
   ];
 
-
   pyproject = true;
-
-
 }
