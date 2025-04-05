@@ -1,4 +1,4 @@
-{lib, buildPythonPackage, fetchPypi, fetchFromGitHub, boto3, future, numpy, pytest, nose, setuptools, setuptools-scm, jdk, cython, pythonJavabridge}:
+{lib, buildPythonPackage, fetchPypi, fetchFromGitHub, boto3, future, numpy, pytest, setuptools, setuptools-scm, jdk, cython, pythonJavabridge}:
 
 buildPythonPackage rec {
     # We note that the 4.1.0 version uses underscores!!
@@ -12,7 +12,7 @@ buildPythonPackage rec {
 
     doCheck = true;
     propagatedBuildInputs = [boto3 future cython pythonJavabridge];
-    checkInputs = [pytest nose];
+    checkInputs = [pytest];
 
     meta = with lib; {
       homepage = "https://github.com/CellProfiler/python-bioformats/";
